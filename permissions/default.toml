@@ -1,0 +1,12 @@
+[default]
+description = "Default permissions for the rust-network-runtime plugin"
+permissions = [
+  "allow-abort-http-request",
+  "allow-eventsource-close",
+  "allow-eventsource-connect",
+  "allow-http-request",
+  "allow-send-beacon",
+  "allow-websocket-close",
+  "allow-websocket-connect",
+  "allow-websocket-send",
+]

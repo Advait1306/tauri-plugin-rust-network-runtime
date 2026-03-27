@@ -1,0 +1,13 @@
+# Automatically generated - DO NOT EDIT!
+
+"$schema" = "../../schemas/schema.json"
+
+[[permission]]
+identifier = "allow-event-source-connect"
+description = "Enables the event_source_connect command without any pre-configured scope."
+commands.allow = ["event_source_connect"]
+
+[[permission]]
+identifier = "deny-event-source-connect"
+description = "Denies the event_source_connect command without any pre-configured scope."
+commands.deny = ["event_source_connect"]
