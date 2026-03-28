@@ -102,6 +102,26 @@ function entriesFromHeaders(headers: Headers): HeaderEntry[] {
   return Array.from(headers.entries()).map(([name, value]) => ({ name, value }))
 }
 
+function addDefaultOriginHeader(headers: Headers, method: string): Headers {
+  const normalizedMethod = method.toUpperCase()
+  if (normalizedMethod === 'GET' || normalizedMethod === 'HEAD') {
+    return headers
+  }
+
+  if (headers.has('origin')) {
+    return headers
+  }
+
+  const origin = globalThis.location?.origin
+  if (!origin || origin === 'null') {
+    return headers
+  }
+
+  const next = new Headers(headers)
+  next.set('origin', origin)
+  return next
+}
+
 function encodeBase64(bytes: Uint8Array): string {
   let binary = ''
   const chunkSize = 0x8000
@@ -172,10 +192,11 @@ async function bodyDataFromRequest(request: Request): Promise<BodyData | undefin
 
 async function httpRequestFromFetch(input: RequestInfo | URL, init?: RequestInit): Promise<HttpRequest> {
   const request = new Request(input, init)
+  const headers = addDefaultOriginHeader(new Headers(request.headers), request.method)
   return {
     url: request.url,
     method: request.method,
-    headers: entriesFromHeaders(new Headers(request.headers)),
+    headers: entriesFromHeaders(headers),
     body: await bodyDataFromRequest(request),
     timeoutMs: null,
     allowRedirects: request.redirect !== 'manual' && request.redirect !== 'error',
@@ -625,12 +646,13 @@ class NetworkRuntimeXMLHttpRequest extends EventTarget {
         headers: this.#headers,
         body: body as BodyInit | null | undefined,
       })
+      const headers = addDefaultOriginHeader(new Headers(request.headers), request.method)
 
       const response = await invokeHttpRequest(
         {
           url: request.url,
           method: request.method,
-          headers: entriesFromHeaders(new Headers(request.headers)),
+          headers: entriesFromHeaders(headers),
           body: await bodyDataFromRequest(request),
           timeoutMs: this.timeout || null,
           allowRedirects: true,
@@ -707,13 +729,14 @@ function patchedSendBeacon(url: string | URL, data?: BodyInit | null): boolean {
       method: 'POST',
       body: data ?? null,
     })
+    const headers = addDefaultOriginHeader(new Headers(request.headers), request.method)
 
     void bodyDataFromRequest(request).then((body) =>
       invoke<boolean>(`${PLUGIN}|send_beacon`, {
         request: {
           url: request.url,
           method: request.method,
-          headers: entriesFromHeaders(new Headers(request.headers)),
+          headers: entriesFromHeaders(headers),
           body,
           timeoutMs: null,
           allowRedirects: true,
