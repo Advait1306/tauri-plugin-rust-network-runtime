@@ -18,6 +18,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json --emitDeclarationOnly && rollup -c",
+    "prepare": "npm run build",
     "prepublishOnly": "pnpm build",
     "pretest": "pnpm build"
   },
