@@ -25,6 +25,20 @@ use crate::{
   Error, Result,
 };
 
+fn cookie_url_for_websocket(url: &Url) -> Url {
+  let mut cookie_url = url.clone();
+  match cookie_url.scheme() {
+    "ws" => {
+      let _ = cookie_url.set_scheme("http");
+    }
+    "wss" => {
+      let _ = cookie_url.set_scheme("https");
+    }
+    _ => {}
+  }
+  cookie_url
+}
+
 #[derive(Clone)]
 pub struct WebSocketClient {
   cookies: CookieStoreHandle,
@@ -185,6 +199,7 @@ async fn run_socket(
       return;
     }
   };
+  let cookie_url = cookie_url_for_websocket(&url);
 
   let mut client_request = match url.as_str().into_client_request() {
     Ok(request) => request,
@@ -218,7 +233,7 @@ async fn run_socket(
       headers.insert("Sec-WebSocket-Protocol", value);
     }
   }
-  if let Some(cookie_header) = cookies.cookie_header(&url) {
+  if let Some(cookie_header) = cookies.cookie_header(&cookie_url) {
     if let Ok(value) = HeaderValue::from_str(&cookie_header) {
       headers.insert("Cookie", value);
     }
@@ -252,7 +267,7 @@ async fn run_socket(
     }
   };
 
-  cookies.store_response_headers(&url, response.headers());
+  cookies.store_response_headers(&cookie_url, response.headers());
   let protocol = response
     .headers()
     .get("Sec-WebSocket-Protocol")
